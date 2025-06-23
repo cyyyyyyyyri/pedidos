@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -64,7 +65,18 @@ public class PedidoController {
             @RequestParam EstadoPedido estado) {
         return ResponseEntity.ok(pedidoService.actualizarEstado(id, estado));
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarPedido(@PathVariable Long id) {
+        try {
+            pedidoService.eliminarPedido(id);
+            // Si se eliminó correctamente, devolvemos 204 No Content
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException ex) {
+            // Si el pedido no existía, devolvemos 404 Not Found
+            return ResponseEntity.notFound().build();
+        }
+    }
 
-
+    
 
 }
