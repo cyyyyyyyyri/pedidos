@@ -45,12 +45,11 @@ public class PedidoService {
         return repo.save(p);
     }
      public void eliminarPedido(Long id) {
-        // Verifica que exista antes de intentar borrar
-        if (!repo.existsById(id)) {
-            throw new RuntimeException("No se puede eliminar: pedido con id " + id + " no existe");
-        }
-        repo.deleteById(id);
+    if (!repo.existsById(id)) {
+        throw new RuntimeException("No se puede eliminar: pedido con id " + id + " no existe");
     }
+    repo.deleteById(id);  // Si el pedido existe, lo eliminamos
+}
 
 
 }

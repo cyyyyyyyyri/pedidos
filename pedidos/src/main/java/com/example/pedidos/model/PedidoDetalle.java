@@ -35,5 +35,5 @@ public class PedidoDetalle {
     @Column(nullable = false)
     private Integer cantidad;
 
-   
+    
 }

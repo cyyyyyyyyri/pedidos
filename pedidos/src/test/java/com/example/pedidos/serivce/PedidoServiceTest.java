@@ -1,6 +1,7 @@
 package com.example.pedidos.serivce;
 
 import com.example.pedidos.model.EstadoPedido;
+import com.example.pedidos.model.PedidoDetalle;
 import com.example.pedidos.model.Ppedido;
 import com.example.pedidos.repository.PedidoRepository;
 import com.example.pedidos.services.PedidoService;
@@ -14,11 +15,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -103,9 +107,57 @@ class PedidoServiceTest {
         verify(repo).deleteById(1L);
     }
 
+   @Test
+void testEliminarPedido() {
+    Long idExistente = 1L;
+    Long idInexistente = 999L;
+
+    // Simulamos que el pedido con idExistente sí existe
+    when(repo.existsById(idExistente)).thenReturn(true);
+    doNothing().when(repo).deleteById(idExistente);
+
+    // Simula que el pedido con idInexistente no existe
+    when(repo.existsById(idInexistente)).thenReturn(false);
+
+    // Verifica que un pedido que existe se elimina correctamente
+    service.eliminarPedido(idExistente);
+    verify(repo).deleteById(idExistente);
+
+    // Verifica que un pedido inexistente lanza la excepción
+    RuntimeException exception = assertThrows(RuntimeException.class, () -> service.eliminarPedido(idInexistente));
+    assertThat(exception.getMessage()).contains("No se puede eliminar: pedido con id 999 no existe");
+}
     @Test
-    void testEliminarPedidoNoExiste() {
-        when(repo.existsById(999L)).thenReturn(false);
-        assertThrows(RuntimeException.class, () -> service.eliminarPedido(999L));
-    }
+void testProcesarPedido() {
+    Ppedido pedido = new Ppedido(1L, 99L, LocalDateTime.now(), EstadoPedido.CONFIRMADO, null);
+
+    when(repo.findById(1L)).thenReturn(Optional.of(pedido));
+    when(repo.save(any(Ppedido.class))).thenAnswer(invoc -> invoc.getArgument(0));
+
+    Ppedido resultado = service.procesarPedido(1L);
+    assertThat(resultado.getEstado()).isEqualTo(EstadoPedido.EN_PROCESO);
+    verify(repo).findById(1L);
+    verify(repo).save(pedido);
+}
+@Test
+void testObtenerPedidoConDetalles() {
+    PedidoDetalle detalle = PedidoDetalle.builder()
+        .id(1L)
+        .pedido(new Ppedido(1L, 99L, LocalDateTime.now(), EstadoPedido.NUEVO, null))
+        .cantidad(5)
+        .build();
+    
+    Set<PedidoDetalle> detalles = new HashSet<>(Arrays.asList(detalle));
+
+    Ppedido pedido = new Ppedido(1L, 99L, LocalDateTime.now(), EstadoPedido.NUEVO, detalles);
+
+    when(repo.findById(1L)).thenReturn(Optional.of(pedido));
+
+    Optional<Ppedido> resultado = service.findById(1L);
+
+    assertThat(resultado).isPresent();
+    assertThat(resultado.get().getDetalles()).hasSize(1);  // Verifica que el pedido tiene 1 detalle
+    verify(repo).findById(1L);
+}
+
 }
