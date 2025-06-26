@@ -36,4 +36,5 @@ public class Ppedido {
 
        @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PedidoDetalle> detalles;
+    
 }

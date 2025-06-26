@@ -1,6 +1,5 @@
-package com.example.pedidos;
+package com.example.pedidos.controller;
 
-import com.example.pedidos.controller.PedidoController;
 import com.example.pedidos.model.EstadoPedido;
 import com.example.pedidos.model.Ppedido;
 import com.example.pedidos.services.PedidoService;

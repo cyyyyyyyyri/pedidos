@@ -1,4 +1,4 @@
-package com.example.pedidos;
+package com.example.pedidos.serivce;
 
 import com.example.pedidos.model.EstadoPedido;
 import com.example.pedidos.model.Ppedido;
