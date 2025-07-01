@@ -4,8 +4,11 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.web.bind.annotation.DeleteMapping;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.pedidos.model.EstadoPedido;
 import com.example.pedidos.model.Ppedido;
 import com.example.pedidos.services.PedidoService;
+
 
 @RestController
 @RequestMapping("api/pedidos")
@@ -54,29 +58,21 @@ public class PedidoController {
         return ResponseEntity.ok(pedidoService.confirmarPedido(id));
     }
 
-    @PostMapping("/{id}/procesar")
+     @PostMapping("/{id}/procesar")
     public ResponseEntity<Ppedido> procesarPedido(@PathVariable Long id) {
-        return ResponseEntity.ok(pedidoService.procesarPedido(id));
+        Ppedido pedido = pedidoService.procesarPedido(id);
+        return ResponseEntity.ok(pedido);  // Si no hay error, procesamos el pedido
     }
 
-    @PatchMapping("/{id}/estado")
-    public ResponseEntity<Ppedido> actualizarEstado(
-            @PathVariable Long id,
-            @RequestParam EstadoPedido estado) {
-        return ResponseEntity.ok(pedidoService.actualizarEstado(id, estado));
+   @PatchMapping("/{id}/estado")
+    public ResponseEntity<Ppedido> actualizarEstado(@PathVariable Long id, @RequestParam EstadoPedido estado) {
+        Ppedido pedido = pedidoService.actualizarEstado(id, estado);
+        return ResponseEntity.ok(pedido);  // Si no hay error, actualizamos el estado
     }
-    @DeleteMapping("/{id}")
+     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarPedido(@PathVariable Long id) {
-        try {
-            pedidoService.eliminarPedido(id);
-            // Si se eliminó correctamente, devolvemos 204 No Content
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException ex) {
-            // Si el pedido no existía, devolvemos 404 Not Found
-            return ResponseEntity.notFound().build();
-        }
+        pedidoService.eliminarPedido(id);  // Si no hay error, eliminamos el pedido
+        return ResponseEntity.noContent().build();
     }
-
-    
-
+   
 }

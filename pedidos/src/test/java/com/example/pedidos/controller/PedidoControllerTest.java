@@ -126,11 +126,34 @@ class PedidoControllerTest {
                 .andExpect(status().isNoContent());
     }
 
-    @Test
-    void testEliminarPedido_noExistente() throws Exception {
-        Mockito.doThrow(new RuntimeException("No existe")).when(pedidoService).eliminarPedido(99L);
+   @Test
+void testProcesarPedido_NoExiste() throws Exception {
+    // Simulamos que el pedido no existe
+    Mockito.when(pedidoService.procesarPedido(99L))
+            .thenThrow(new RuntimeException("Pedido no encontrado"));
 
-        mockMvc.perform(delete("/api/pedidos/99"))
-                .andExpect(status().isNotFound());
-    }
+    mockMvc.perform(post("/api/pedidos/99/procesar"))
+            .andExpect(status().isNotFound())  // Verificamos que se retorna 404
+            .andExpect(content().string("Error: Pedido no encontrado"));  // Verificamos el mensaje de error
+}
+@Test
+void testActualizarEstado_CasoInvalido() throws Exception {
+    // Simulamos que el pedido no existe
+    Mockito.when(pedidoService.actualizarEstado(99L, EstadoPedido.EN_PROCESO))
+            .thenThrow(new RuntimeException("Pedido no encontrado"));
+
+    mockMvc.perform(patch("/api/pedidos/99/estado")
+            .param("estado", "EN_PROCESO"))
+            .andExpect(status().isNotFound())  // Verificamos que se retorna 404
+            .andExpect(content().string("Error: Pedido no encontrado"));  // Verificamos el mensaje de error
+}
+@Test
+void testEliminarPedido_NoExiste() throws Exception {
+    // Simulamos que el pedido no existe
+    Mockito.doThrow(new RuntimeException("Pedido no encontrado")).when(pedidoService).eliminarPedido(99L);
+
+    mockMvc.perform(delete("/api/pedidos/99"))
+            .andExpect(status().isNotFound());  // Debería retornar 404 si el pedido no existe
+}
+
 }

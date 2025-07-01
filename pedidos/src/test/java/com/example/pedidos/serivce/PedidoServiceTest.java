@@ -112,7 +112,7 @@ void testEliminarPedido() {
     Long idExistente = 1L;
     Long idInexistente = 999L;
 
-    // Simulamos que el pedido con idExistente sí existe
+    // Simula que el pedido con idExistente sí existe
     when(repo.existsById(idExistente)).thenReturn(true);
     doNothing().when(repo).deleteById(idExistente);
 
