@@ -7,18 +7,30 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.pedidos.dto.ProductoDTO;
 import com.example.pedidos.model.EstadoPedido;
+import com.example.pedidos.model.PedidoDetalle;
 import com.example.pedidos.model.Ppedido;
 import com.example.pedidos.repository.PedidoRepository;
-
+//import com.example.pedidos.services.ProductoService;
 @Service
 public class PedidoService {
-     @Autowired
+    @Autowired
     private PedidoRepository repo;
+
+    @Autowired
+    private ProductoService productoService;
 
     public Ppedido crearPedido(Ppedido pedido) {
         pedido.setFechaCreacion(LocalDateTime.now());
         pedido.setEstado(EstadoPedido.NUEVO);
+
+        // Iterar sobre los detalles del pedido para obtener los productos asociados
+        for (PedidoDetalle detalle : pedido.getDetalles()) {
+            ProductoDTO productoDTO = productoService.obtenerProductoDTO(detalle.getProducto().getId());
+            // Aquí puedes realizar cualquier procesamiento adicional con el productoDTO
+        }
+
         return repo.save(pedido);
     }
 
@@ -44,12 +56,11 @@ public class PedidoService {
         p.setEstado(nuevoEstado);
         return repo.save(p);
     }
-     public void eliminarPedido(Long id) {
-    if (!repo.existsById(id)) {
-        throw new RuntimeException("No se puede eliminar: pedido con id " + id + " no existe");
+
+    public void eliminarPedido(Long id) {
+        if (!repo.existsById(id)) {
+            throw new RuntimeException("No se puede eliminar: pedido con id " + id + " no existe");
+        }
+        repo.deleteById(id);  // Si el pedido existe, lo eliminamos
     }
-    repo.deleteById(id);  // Si el pedido existe, lo eliminamos
-}
-
-
 }
