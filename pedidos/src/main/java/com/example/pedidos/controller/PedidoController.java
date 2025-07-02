@@ -4,75 +4,80 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
+import com.example.pedidos.assembler.PpedidoAssembler;
 import com.example.pedidos.model.EstadoPedido;
 import com.example.pedidos.model.Ppedido;
 import com.example.pedidos.services.PedidoService;
 
-
 @RestController
 @RequestMapping("api/pedidos")
 public class PedidoController {
+
     @Autowired
     private PedidoService pedidoService;
 
-    @PostMapping
-    public ResponseEntity<Ppedido> crearPedido(@RequestBody Ppedido pedido) {
+    @Autowired
+    private PpedidoAssembler ppedidoAssembler;
+
+       @PostMapping
+    public ResponseEntity<EntityModel<Ppedido>> crearPedido(@RequestBody Ppedido pedido) {
         Ppedido creado = pedidoService.crearPedido(pedido);
+        EntityModel<Ppedido> resource = ppedidoAssembler.toModel(creado);
         return ResponseEntity
-                .created(URI.create("/api/pedidos/" + creado.getId()))
-                .body(creado);
+                .created(resource.getRequiredLink("self").toUri())
+                .body(resource);
     }
 
-    @GetMapping
-    public ResponseEntity<List<Ppedido>> listarPedidos() {
-        List<Ppedido> lista = pedidoService.findAll();
-        if (lista.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(lista);
+       @GetMapping
+    public ResponseEntity<CollectionModel<EntityModel<Ppedido>>> listarPedidos() {
+        List<EntityModel<Ppedido>> list = pedidoService.findAll().stream()
+            .map(ppedidoAssembler::toModel)
+            .toList();
+        if (list.isEmpty()) return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(CollectionModel.of(list,
+            linkTo(methodOn(PedidoController.class).listarPedidos()).withSelfRel()
+        ));
     }
+
 
     @GetMapping("/{id}")
-    public ResponseEntity<Ppedido> getPedido(@PathVariable Long id) {
+    public ResponseEntity<EntityModel<Ppedido>> getPedido(@PathVariable Long id) {
         return pedidoService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+            .map(ppedidoAssembler::toModel)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{id}/confirmar")
-    public ResponseEntity<Ppedido> confirmarPedido(@PathVariable Long id) {
-        return ResponseEntity.ok(pedidoService.confirmarPedido(id));
+    public ResponseEntity<EntityModel<Ppedido>> confirmarPedido(@PathVariable Long id) {
+        Ppedido p = pedidoService.confirmarPedido(id);
+        return ResponseEntity.ok(ppedidoAssembler.toModel(p));
     }
 
-     @PostMapping("/{id}/procesar")
-    public ResponseEntity<Ppedido> procesarPedido(@PathVariable Long id) {
-        Ppedido pedido = pedidoService.procesarPedido(id);
-        return ResponseEntity.ok(pedido);  // Si no hay error, procesamos el pedido
+    @PostMapping("/{id}/procesar")
+    public ResponseEntity<EntityModel<Ppedido>> procesarPedido(@PathVariable Long id) {
+        Ppedido p = pedidoService.procesarPedido(id);
+        return ResponseEntity.ok(ppedidoAssembler.toModel(p));
     }
 
-   @PatchMapping("/{id}/estado")
-    public ResponseEntity<Ppedido> actualizarEstado(@PathVariable Long id, @RequestParam EstadoPedido estado) {
-        Ppedido pedido = pedidoService.actualizarEstado(id, estado);
-        return ResponseEntity.ok(pedido);  // Si no hay error, actualizamos el estado
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<EntityModel<Ppedido>> actualizarEstado(@PathVariable Long id,
+                                                                 @RequestParam EstadoPedido estado) {
+        Ppedido p = pedidoService.actualizarEstado(id, estado);
+        return ResponseEntity.ok(ppedidoAssembler.toModel(p));
     }
-     @DeleteMapping("/{id}")
+
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarPedido(@PathVariable Long id) {
-        pedidoService.eliminarPedido(id);  // Si no hay error, eliminamos el pedido
+        pedidoService.eliminarPedido(id);
         return ResponseEntity.noContent().build();
     }
-   
 }
